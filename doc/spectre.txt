@@ -10,6 +10,8 @@ Table of Contents                                  *spectre-table-of-contents*
   - Regex Issue                                          |spectre-regex-issue|
   - Replace                                                  |spectre-replace|
   - Customize                                              |spectre-customize|
+  - Replace Method                                    |spectre-replace-method|
+  - Sponsors                                                |spectre-sponsors|
   - FAQ                                                          |spectre-faq|
 
 ==============================================================================
@@ -62,12 +64,16 @@ USAGE                                                          *spectre-usage*
     
     "search current word
     nnoremap <leader>sw <cmd>lua require('spectre').open_visual({select_word=true})<CR>
-    vnoremap <leader>s <cmd>lua require('spectre').open_visual()<CR>
+    vnoremap <leader>s <esc>:lua require('spectre').open_visual()<CR>
     "  search in current file
     nnoremap <leader>sp viw:lua require('spectre').open_file_search()<cr>
-    " run command :Spectre
 <
 
+
+Or use command: `Spectre`: * `%` will expand to current file. * arguments that
+can’t match `key=value` mean `path=something`. * many arguments that can’t
+match `key=value` will pick the last one. * example: `:Spectre %
+is_insert_mode=true cwd=~/.config/nvim`.
 
 **WARNING** * Commit your file before you replace text. It does not support
 undo * Don’t use your crazy vim skill to edit result text or UI. * You can
@@ -155,6 +161,16 @@ change when plugin update so better use a default setting.
             cmd = "<cmd>lua require('spectre').change_view()<CR>",
             desc = "change result view mode"
         },
+        ['change_replace_sed'] = {
+          map = "trs",
+          cmd = "<cmd>lua require('spectre').change_engine_replace('sed')<CR>",
+          desc = "use sed to replace"
+        },
+        ['change_replace_oxi'] = {
+          map = "tro",
+          cmd = "<cmd>lua require('spectre').change_engine_replace('oxi')<CR>",
+          desc = "use oxi to replace"
+        },
         ['toggle_live_update']={
           map = "tu",
           cmd = "<cmd>lua require('spectre').toggle_live_update()<CR>",
@@ -169,6 +185,11 @@ change when plugin update so better use a default setting.
           map = "th",
           cmd = "<cmd>lua require('spectre').change_options('hidden')<CR>",
           desc = "toggle search hidden"
+        },
+        ['resume_last_search'] = {
+          map = "<leader>l",
+          cmd = "<cmd>lua require('spectre').resume_last_search()<CR>",
+          desc = "resume last search before close"
         },
         -- you can put your mapping here it only use normal mode
       },
@@ -222,14 +243,26 @@ change when plugin update so better use a default setting.
       replace_engine={
           ['sed']={
               cmd = "sed",
-              args = nil
+              args = nil,
+              options = {
+                ['ignore-case'] = {
+                  value= "--ignore-case",
+                  icon="[I]",
+                  desc="ignore case"
+                },
+              }
           },
-          options = {
-            ['ignore-case'] = {
-              value= "--ignore-case",
-              icon="[I]",
-              desc="ignore case"
-            },
+          -- call rust code by nvim-oxi to replace
+          ['oxi'] = {
+            cmd = 'oxi',
+            args = {},
+            options = {
+              ['ignore-case'] = {
+                value = "i",
+                icon = "[I]",
+                desc = "ignore case"
+              },
+            }
           }
       },
       default = {
@@ -265,10 +298,46 @@ CUSTOM FUNCTION ~
       cwd = "~/.config/nvim",
       search_text="test",
       replace_text="test",
-      path="lua/**/*.lua"
+      path="lua/**/*.lua",
+      is_close = false, --  close an exists instance of spectre and open new
     })
 <
 
+
+REPLACE METHOD                                        *spectre-replace-method*
+
+There are 2 replace method sed and oxi.
+
+│           Sed            │                oxi                │
+│group number by '\0'      │group number by '$0'               │
+│use vim to highlight on UI│use rust to highlight on UI        │
+│use sed to replace        │use rust to replace                │
+│run sed command           │call rust code directly by nvim-oxi│
+
+
+Install oxi: - you need install cargo and run command: build.sh <./build.sh>
+nvim-oxi <https://github.com/noib3/nvim-oxi>
+
+
+- set default replace command to "oxi" on setup()
+
+
+>
+    require('spectre').setup({
+        default = {
+            replace = {
+                cmd = "oxi"
+           }
+        }
+      )
+<
+
+
+SPONSORS                                                    *spectre-sponsors*
+
+Thanks to everyone who sponsors my projects and makes continued development
+maintenance possible! <!-- patreon --><a href="https://github.com/t4t5"><img
+src="https://github.com/t4t5.png" width="60px" alt="" /></a><!-- patreon-->
 
 FAQ                                                              *spectre-faq*
 
